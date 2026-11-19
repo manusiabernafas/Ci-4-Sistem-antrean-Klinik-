@@ -1,0 +1,48 @@
+Deskripsi
+Source code sistem antrean berbasis CodeIgniter 4 dan MySQL untuk klinik, puskesmas, praktik dokter bersama, atau layanan dengan beberapa loket. Pasien mengambil nomor di kios layar sentuh dan mendapat tiket 58 mm ber-QR. Petugas memanggil dari halaman loket, lalu nomor tampil besar di layar TV ruang tunggu dan diumumkan dengan suara, misalnya "Nomor antrean A, dua belas. Silakan menuju Ruang Periksa 1, Poli Umum."
+
+Pasien tidak perlu menunggu berdesakan karena bisa memantau nomor yang sedang dipanggil dan jumlah antrean di depannya langsung dari HP lewat QR di tiket. Admin mengatur poli, kuota harian, petugas, teks berjalan di TV, dan melihat laporan waktu tunggu serta waktu layanan per poli. Tampilannya ramah dengan hijau eucalyptus dan koral, angka antrean raksasa, dan font Montserrat yang sudah disertakan sehingga tetap rapi tanpa internet.
+Cara kerja
+Data tersimpan di MySQL: poli, pengguna, antrean, catatan panggilan, pengaturan, dan penghitung percobaan. Nomor antrean dimulai dari 1 setiap hari per poli dengan kunci unik tanggal + poli + nomor. Saat mengambil nomor maupun memanggil pasien, baris poli dikunci di dalam transaksi (SELECT ... FOR UPDATE), sehingga beberapa kios yang ditekan bersamaan tetap mendapat nomor berurutan tanpa dobel, dan dua loket yang menekan Panggil berikutnya bersamaan tidak pernah memanggil pasien yang sama. Kuota harian per poli dicek di dalam transaksi yang sama.
+
+Setiap pemanggilan, termasuk panggil ulang, dicatat di tabel panggilan. Layar TV mengambil data JSON setiap 2 detik dan mengumumkan panggilan baru dengan nada ding-dong buatan Web Audio API dan suara Bahasa Indonesia dari browser, dengan angka diubah menjadi kata agar terdengar jelas. Pasien yang tidak hadir bisa dilewati lalu dipanggil lagi, dan Panggil berikutnya otomatis menyelesaikan pasien sebelumnya di loket itu.
+
+Kios dan layar TV dibuka tanpa login tetapi dilindungi kode acak di alamatnya yang bisa diganti kapan saja. Tiket memakai token acak untuk halaman status di HP. Ada dua peran: admin dan petugas loket. Keamanan memakai CSRF CodeIgniter, password_hash, batas percobaan login dan ambil tiket per IP di database, akun nonaktif langsung keluar, .htaccess yang mengarahkan semua permintaan ke public/, dan ekspor CSV yang aman dari formula injection.
+Fitur
+Kios layar sentuh: tombol besar per poli, jumlah menunggu, sisa kuota
+Tiket 58 mm siap cetak printer thermal dengan QR cek antrean
+Cek antrean dari HP: nomor yang sedang dipanggil dan jumlah antrean di depan
+Layar TV ruang tunggu: nomor raksasa, ruang tujuan, riwayat panggilan, ringkasan per poli
+Suara panggilan Bahasa Indonesia + nada ding-dong, angka dibacakan sebagai kata
+Teks berjalan di layar TV bisa diubah dari pengaturan
+Halaman loket: panggil berikutnya, panggil ulang, tidak hadir, selesai
+Pasien yang dilewati bisa dipanggil lagi kapan saja
+Beberapa loket untuk satu poli (Ruang Periksa 1, 2, dst.)
+Nomor berurutan dan tidak pernah dobel walau kios/loket menekan bersamaan
+Nomor dimulai dari 1 setiap hari, kuota harian per poli
+Ringkasan admin: tiket, selesai, menunggu, rata-rata tunggu, grafik per jam & 14 hari
+Laporan per poli: total, tidak hadir, rata-rata & terlama menunggu, lama layanan + CSV
+Kelola poli: kode huruf, dokter, warna, kuota, urutan, aktif/nonaktif
+Kelola petugas loket, akun nonaktif langsung keluar
+Alamat kios & TV dilindungi kode acak yang bisa diganti
+Font Montserrat disertakan: tampilan TV & kios rapi tanpa internet
+Data contoh: 4 poli dan riwayat antrean 14 hari
+Responsif, petugas bisa memanggil dari HP
+Keamanan: CSRF, password_hash, batas percobaan per IP, penguncian baris database
+CodeIgniter 4.7, setup.bat sekali klik di XAMPP
+Panduan instalasi
+Kebutuhan: PHP 8.2+ dengan ekstensi intl (XAMPP 8.2+ / Laragon), MySQL/MariaDB, dan Composer.
+
+Ekstrak ZIP lalu pindahkan folder antrean-klinik ke C:\xampp\htdocs\ (atau C:\laragon\www\).
+
+Aktifkan ekstensi intl: buka C:\xampp\php\php.ini, hapus tanda ; di depan extension=intl, simpan, lalu restart Apache.
+
+Nyalakan Apache dan MySQL di XAMPP Control Panel.
+
+Klik dua kali setup.bat (Linux/macOS: bash setup.sh). Script memasang dependensi Composer, membuat database antrean_klinik, tabel, dan data contoh.
+
+Buka http://localhost/antrean-klinik lalu masuk:
+
+Admin: admin / admin123
+Petugas loket: petugas / petugas123
+Di halaman Ringkasan, buka kios di tablet/PC layar sentuh dan layar TV di TV ruang tunggu (tekan Aktifkan sekali agar suara menyala). Atur poli, kuota, dan nama klinik di menu Poli dan Pengaturan, lalu ganti semua kata sandi.
